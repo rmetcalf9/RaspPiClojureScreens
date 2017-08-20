@@ -22,3 +22,7 @@ We have setup a test slack channel to play with: https://rjmslackexp.slack.com
 
 We want to use this project to learn about clojure which is the basis for chosing to develop in this.
 
+## Current Tasks
+
+Currently we are in the process of conducting proof of concept tests.
+Completed proof of concept tests are to be able to present a picture file to the screen using clojure.
