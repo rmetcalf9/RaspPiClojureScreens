@@ -60,5 +60,9 @@ git_private_ssh_key_path - path to the private key that matches the public key u
 project_repo - change to your own fork of the project repo
 
 
+### 3. Use remote desktop to connect to the Respberry Pi
+
+VNC
+
 
 
