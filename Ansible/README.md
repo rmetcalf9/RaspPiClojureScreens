@@ -49,7 +49,7 @@ Generate a public and private ssh key pair. You will need to upload the public k
 
 Run the ansible command:
 ````
-ansible-playbook -i "usbpi," dev_instance.yml --extra-vars "git_public_ssh_key_path=/home/robert/.ssh/id_rsa_infrastructure.pub git_private_ssh_key_path=/home/robert/.ssh/id_rsa_infrastructure"
+ansible-playbook -i "usbpi," dev_instance.yml --extra-vars "git_public_ssh_key_path=/home/robert/.ssh/id_rsa_infrastructure.pub git_private_ssh_key_path=/home/robert/.ssh/id_rsa_infrastructure project_repo=git@github.com:rmetcalf9/RaspPiClojureScreens.git"
 ````
 
 Replace usbpi with the hostname of the Raspberry Pi you are configuring the instance on.
@@ -57,6 +57,8 @@ Replace usbpi with the hostname of the Raspberry Pi you are configuring the inst
 You will have to replace the extra-vars as follows:
 git_public_ssh_key_path - path to the public key you uploaded to git (on your configuration machine)
 git_private_ssh_key_path - path to the private key that matches the public key uploaded to git
+project_repo - change to your own fork of the project repo
+
 
 
 

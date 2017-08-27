@@ -31,8 +31,20 @@
 # install Java 8 NOT NEEDED it is already installed in the Raspbian image
 # install Clojure using lein
 
-# add github to known hosts
-# clone main repository
+    - name: ensure github.com is a known host
+      lineinfile:
+        dest: /home/pi/.ssh/known_hosts
+        create: yes
+        state: present
+        line: "{{ lookup('pipe', 'ssh-keyscan -t rsa github.com') }}"
+        regexp: "^github\\.com"
+
+    - name: Clone RaspPiClojureScreens repo
+      git:
+        repo: "{{ project_repo }}"
+        accept_hostkey: true
+        dest: /home/pi/RaspPiClojureScreens
+
 
 # get a remote desktop working
 
