@@ -1,0 +1,40 @@
+---
+- hosts: all
+  remote_user: pi
+
+
+  tasks:
+    - name: Install GIT
+      become: true
+      apt:
+        name: git
+        update_cache: true
+        state: present
+
+    - name: Upload public key
+      copy:
+        src: "{{ git_public_ssh_key_path }}"
+        dest: /home/pi/.ssh/id_rsa.pub
+        owner: pi
+        group: pi
+        mode: 0600
+
+    - name: Upload private key
+      copy:
+        src: "{{ git_private_ssh_key_path }}"
+        dest: /home/pi/.ssh/id_rsa
+        owner: pi
+        group: pi
+        mode: 0600
+
+
+# install Java 8 NOT NEEDED it is already installed in the Raspbian image
+# install Clojure using lein
+
+# add github to known hosts
+# clone main repository
+
+# get a remote desktop working
+
+# install desktop launch shortcuts
+
