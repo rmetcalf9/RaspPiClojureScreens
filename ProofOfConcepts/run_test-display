@@ -1,0 +1,6 @@
+#!/bin/bash
+
+cd ./test-display
+lein run
+
+exit 0
