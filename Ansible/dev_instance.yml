@@ -100,6 +100,7 @@
         dest: /home/pi/Desktop/ProofOfConcepts
         state: link
 
+# TODO Test alt: ln -s /home/pi/RaspPiClojureScreens/ProofOfConcepts /home/pi/Desktop/ProofOfConcepts
 
 # TODO install desktop launch shortcuts
 
