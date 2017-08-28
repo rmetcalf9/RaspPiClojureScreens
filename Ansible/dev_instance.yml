@@ -86,6 +86,19 @@
         daemon_reload: yes
         name: tightvncserver
 
+# Install Clojure (lein script self installs on first run)
+    - name: download lein (for clojure)
+      become: true
+      get_url:
+        url: https://raw.githubusercontent.com/technomancy/leiningen/stable/bin/lein
+        dest: /usr/local/bin/lein
+        mode: 0755
+
+    - name: Place link to ProofOfConcepts on desktop
+      file: 
+        src: /home/pi/RaspPiClojureScreens/ProofOfConcepts
+        dest: /home/pi/Desktop/ProofOfConcepts
+        state: link
 
 
 # TODO install desktop launch shortcuts
