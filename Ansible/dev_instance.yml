@@ -45,7 +45,48 @@
         accept_hostkey: true
         dest: /home/pi/RaspPiClojureScreens
 
+#Replace RealVNC (Comercial) with tightVNC
+    - name: Remove RealVNC Server
+      become: true
+      apt:
+        name: realvnc-vnc-server
+        update_cache: true
+        state: absent
+
+    - name: Remove RealVNC viewer
+      become: true
+      apt:
+        name: remove realvnc-vnc-viewer
+        update_cache: true
+        state: absent
+
+    - name: Install tightvncserver
+      become: true
+      apt:
+        name: tightvncserver
+        update_cache: true
+        state: present
+
+##TODO Set tightVNC password automatically
+
+    - name: Install tightvnc.service file
+      become: true
+      template:
+        src: ./tightvncserver.service
+        dest: /etc/systemd/system/tightvncserver.service
+        owner: root
+        group: root
+        mode: 664
+
+    - name: Make sure tightvncserver is running
+      become: true
+      systemd:
+        state: started
+        enabled: yes
+        daemon_reload: yes
+        name: tightvncserver
 
 
-# install desktop launch shortcuts
+
+# TODO install desktop launch shortcuts
 

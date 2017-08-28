@@ -51,19 +51,33 @@ project_repo - change to your own fork of the project repo
 
 # 3. Use remote desktop to connect to the Respberry Pi
 
-To connect I had to use realVNC (We should find an alternative)
-https://www.realvnc.com/en/connect/download/viewer
+Source I refered to when creating the process for tightVNC (https://www.childs.be/blog/post/remove-real-vnc-from-raspberrypi-pixel-and-install-tightvnc)
 
-on the instance run raspi-config
-then goto 
-7 Advanced options
-A5 Resolution
-DMT Mode 9  800x600 60Hz 4:3 (My choice - this is just for testing)
 
-Use RealVNC viewer to connect to the raspberry pi using user pi and password raspberry.
+ssh into the raspberry pi
+type
+````
+tightvncserver
+````
+configure it with a use and password.
 
-TODO Security configuration for RealVNC (or switch to alternative vnc server)
+enter an 8 digit password
+do not enter a view only password
 
+I got the following response from the config program:
+Creating default startup script /home/pi/.vnc/xstartup
+Starting applications specified in /home/pi/.vnc/xstartup
+Log file is /home/pi/.vnc/raspiclojuredev001:1.log
+
+You must start a session with the desired gemoetry and colour depth. Find the settings you want and run the following on the Raspberry PI.
+````
+vncserver -kill :1
+vncserver :1 -geometry 1024x612 -depth 16
+````
+
+you can connect to HOSTNAME:1 with a vnc client
+
+The first time I ran it I set the background to a solid colour.
 
 
 
