@@ -10,7 +10,7 @@ In the Boot partition create a file called "ssh" with zero contents
 
 For the network connection you can either
  - Use wifi by configuring /etc/wpa_supplicant (My notes on this https://code2.metcarob.com/node/235)
- - USe USBOTG (My notes on this https://code2.metcarob.com/node/307)
+ - Use USBOTG (My notes on this https://code2.metcarob.com/node/307)
 
 Place card in Raspberry Pi Zero W and let it boot. First time will take a while as it will resize the partition.
 
@@ -44,12 +44,16 @@ ansible-playbook -i "usbpi," dev_instance.yml --extra-vars "git_public_ssh_key_p
 Replace usbpi with the hostname of the Raspberry Pi you are configuring the instance on.
 
 You will have to replace the extra-vars as follows:
-git_public_ssh_key_path - path to the public key you uploaded to git (on your configuration machine)
-git_private_ssh_key_path - path to the private key that matches the public key uploaded to git
-project_repo - change to your own fork of the project repo
+ | Name                     | Explination  | 
+ |:-------------------------|:------------|
+ | git_public_ssh_key_path  | path to the public key you uploaded to git (on your configuration machine)
+ | git_private_ssh_key_path | path to the private key that matches the public key uploaded to git
+ | project_repo             | change to your own fork of the project repo
 
 
 # 3. Use remote desktop to connect to the Respberry Pi
+
+Raspbian comes pre-installed with a vnc server called RealVNC. This has a very restrictive license which requires registing for an online account to use. For this reason it is beter for us to use tightVNC which is a free opensource one availaible online. The ansible script will do the nessecary removal and instalisation however there are a few extra steps required to setup the password and screen resolution. (Described below)
 
 Source I refered to when creating the process for tightVNC (https://www.childs.be/blog/post/remove-real-vnc-from-raspberrypi-pixel-and-install-tightvnc)
 
