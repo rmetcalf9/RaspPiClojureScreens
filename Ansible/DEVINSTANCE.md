@@ -44,6 +44,7 @@ ansible-playbook -i "usbpi," dev_instance.yml --extra-vars "git_public_ssh_key_p
 Replace usbpi with the hostname of the Raspberry Pi you are configuring the instance on.
 
 You will have to replace the extra-vars as follows:
+
  | Name                     | Explination  | 
  |:-------------------------|:------------|
  | git_public_ssh_key_path  | path to the public key you uploaded to git (on your configuration machine)
