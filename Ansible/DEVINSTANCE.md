@@ -20,7 +20,6 @@ Follow the following steps:
 - create ~/.ssh directory and add my public ssh key to ~/.ssh/authorized_keys (Then check by logging off and on)
 - use raspi-config to set localization options timezone to europe/london
 - set hostname to desired hostname
-- Turn on vnc (it's under interfacing options)
 - reboot so all settings take effect
 
 We are leaving the password login method open at this point - we will alter it once we have configured VNC server
