@@ -14,12 +14,12 @@ For the network connection you can either
 
 Place card in Raspberry Pi Zero W and let it boot. First time will take a while as it will resize the partition.
 
-Once the Raspberry Pi has booted SSH into it using the user pi and the password raspberry.
+Once the Raspberry Pi has booted SSH into it using the user pi and the password raspberry:
 
 Follow the following steps:
 - create ~/.ssh directory and add my public ssh key to ~/.ssh/authorized_keys (Then check by logging off and on)
 - use raspi-config to set localization options timezone to europe/london
-- set hostname to desired hostname
+- use raspi-config to set hostname to desired hostname
 - reboot so all settings take effect
 
 We are leaving the password login method open at this point - we will alter it once we have configured VNC server
