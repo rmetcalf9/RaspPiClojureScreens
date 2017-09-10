@@ -27,9 +27,9 @@ We are leaving the password login method open at this point - we will alter it o
 
 # 3. Create a fork of the project
 
-In order to start playing with the code you should create you own 'fork' of this project on github. If you don't have a github account create one, then browse to the proejct and 'XXXXX'
+In order to start playing with the code you should create you own 'fork' of this project on github. If you don't have a github account create one, then browse to the proejct and clcik fork in the top left corner of the screen.
 
-TODO
+You should now have a forked version of this project. 
 
 # 2. Run ansible dev_instance playbook
 
