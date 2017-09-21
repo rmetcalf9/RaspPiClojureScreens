@@ -1,6 +1,9 @@
 (ns test-display-and-control.core
   (:gen-class)
-  (:use [seesaw.core :as sc]))
+  (:use [seesaw.core :as sc]
+        [seesaw.graphics :as sg]
+        [seesaw.color :as scolor]
+  ))
 
 
 ;forward declaration
@@ -20,10 +23,21 @@
   )
 )
 
+(defn paint-main-canvas [c g]
+   (sg/draw g (rect 10 10 20 20)
+           (style :foreground (scolor/color :black))))
+
+(def main-canvas
+  (sc/canvas :id         :maincanvas
+             :background :blue
+             :paint paint-main-canvas
+  )
+)
+
 (def main-window
   (sc/frame 
 				:title "SlideShow Application Frame" 
-				:content "<html><h1>1</h1>" 
+				:content main-canvas
 				:on-close :exit
 				:listen [:key-released keyreleaseHandler]
   )
