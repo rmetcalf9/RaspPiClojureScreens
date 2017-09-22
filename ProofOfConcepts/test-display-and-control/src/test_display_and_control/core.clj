@@ -23,9 +23,41 @@
   )
 )
 
+(defn draw-clock [c g center radius stroke_width]
+  (translate g (first center) (last center))
+
+  ;center square
+  (sg/draw g (rect -5 -5 10 10)
+           (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  )
+
+  ;Draw 4 big ticks
+  (def bigticksize (/ radius 10))
+
+	;TRYING to make it work over a list [0 90 180 270]
+  (rotate g 0)
+  (sg/draw g (polygon [0 (- 0 radius)] [0 (- 0 (- radius bigticksize))])
+      (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  )
+  (rotate g 90)
+  (sg/draw g (polygon [0 (- 0 radius)] [0 (- 0 (- radius bigticksize))])
+      (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  )
+  (rotate g 180)
+  (sg/draw g (polygon [0 (- 0 radius)] [0 (- 0 (- radius bigticksize))])
+      (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  )
+  (rotate g 270)
+  (sg/draw g (polygon [0 (- 0 radius)] [0 (- 0 (- radius bigticksize))])
+      (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  )
+
+
+)
+
 (defn paint-main-canvas [c g]
-   (sg/draw g (rect 10 10 20 20)
-           (style :foreground (scolor/color :black))))
+  (draw-clock c g [300 300] 50 5)
+)
 
 (def main-canvas
   (sc/canvas :id         :maincanvas
