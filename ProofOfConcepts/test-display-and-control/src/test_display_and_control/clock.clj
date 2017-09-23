@@ -3,7 +3,11 @@
   (:use [seesaw.core :as sc]
         [seesaw.graphics :as sg]
         [seesaw.color :as scolor]
+        [clj-time.core :as t]
   ))
+
+;Time library documentation
+;https://github.com/seancorfield/clj-time
 
 (defn draw-clock [c g center radius stroke_width]
   (translate g (first center) (last center))
@@ -49,14 +53,21 @@
     (sg/rotate g (- 0 angle))
 	))
 
+	(def curtime (t/now))
+	(def h (t/hour curtime))
+	(def m (t/minute curtime))
+	(def s (t/second curtime))
+
 	;Draw second hand
-	(paint-hand 10 :red (* 9 (/ radius 10)) (/ stroke_width 2))
+	(paint-hand (* s (/ 360 60)) :red (* 9 (/ radius 10)) (/ stroke_width 2))
 
 	;Draw minute hand
-	(paint-hand 20 :blue (* 7 (/ radius 9)) stroke_width)
+	(def minutes_and_seconds (+ s (* m 60)))
+	(paint-hand (* minutes_and_seconds (/ 360 (* 60 60))) :blue (* 7 (/ radius 9)) stroke_width)
 
 	;Draw hour hand
-	(paint-hand 30 :green (* 3(/ radius 6)) (* stroke_width 2))
+	(def hours_minutes_and_seconds (+ minutes_and_seconds (* h 60 60)))
+	(paint-hand (* hours_minutes_and_seconds (/ 360 (* 60 60 60))) :green (* 3(/ radius 6)) (* stroke_width 2))
 
 )
 
