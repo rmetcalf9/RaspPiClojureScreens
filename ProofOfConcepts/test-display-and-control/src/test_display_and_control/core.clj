@@ -63,7 +63,7 @@
   (sc/show! main-window)
 
   ;start a timer that runs every half second
-  (sc/timer timer-fn :initial-value [0] :delay 500)
+  (sc/timer timer-fn :initial-value [0] :delay 50)
 
   (println "End Execution")
   )

@@ -57,9 +57,12 @@
 	(def h (t/hour curtime))
 	(def m (t/minute curtime))
 	(def s (t/second curtime))
+	(def ms (t/milli curtime))
+
+	(def mss (+ (* s 1000) ms))
 
 	;Draw second hand
-	(paint-hand (* s (/ 360 60)) :red (* 9 (/ radius 10)) (/ stroke_width 2))
+	(paint-hand (* mss (/ 360 60000)) :red (* 9 (/ radius 10)) (/ stroke_width 2))
 
 	;Draw minute hand
 	(def minutes_and_seconds (+ s (* m 60)))
