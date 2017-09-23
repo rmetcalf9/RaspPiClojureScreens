@@ -24,6 +24,14 @@
   )
 )
 
+(defn oncloseHandler
+  [event]
+  (do
+    (println "onclose")
+    (System/exit 0)
+  )
+)
+
 (def main-canvas
   (sc/canvas :id         :maincanvas
              :background :lightgrey
@@ -36,9 +44,15 @@
 				:title "SlideShow Application Frame" 
 				:content main-canvas
 				:on-close :exit
-				:listen [:key-released keyreleaseHandler]
+				:listen [:key-released keyreleaseHandler :window-closed oncloseHandler]
   )
 )
+
+; https://icyrock.com/blog/2012/01/clojure-and-seesaw/q
+; (timer (fn [e] (repaint! (select f [:#clock])) 1000))))
+(defn timer-fn [timer-state] (do
+  (repaint! (select main-window [:#maincanvas]))
+))
 
 (defn -main
   "Main entry point for slideshow application"
@@ -47,5 +61,9 @@
   (sc/full-screen! main-window)
   (sc/pack! main-window)
   (sc/show! main-window)
+
+  ;start a timer that runs every half second
+  (sc/timer timer-fn :initial-value [0] :delay 500)
+
   (println "End Execution")
   )
