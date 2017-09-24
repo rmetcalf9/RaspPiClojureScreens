@@ -4,6 +4,7 @@
         [seesaw.graphics :as sg]
         [seesaw.color :as scolor]
         [test-display-and-control.paint :as tdcpaint]
+        [clj-time.core :as t]
   ))
 
 
@@ -75,16 +76,26 @@
   (print ".")
 ))
 
+;now function required for setting current time to atom
+(defn nowFn [inp] (t/now))
+
 ;Worker thread that will call any function (fn) repeatadly (with a wait delay) until the app terminates
 (defn worker [fn wait] (do
   (println "start of worker")
   (loop [] (do
     (fn)
-    ;TODO This will only check appRunning once every wait seconds
+    ;Can't just sleep for wait seconds as
     ;    if wait is long this will be a problem - worker may not end
     ;    instead it should wake up mutiple times during it's wait period and
     ;    terminate immedatadly if delay is over
-    (Thread/sleep wait)
+    (def endSleepTime (atom (t/plus (t/now) (t/millis wait))))
+    (while (before? (t/now) @endSleepTime) (do
+      (Thread/sleep 100)
+      (if (not(pos? @appRunning)) (do
+        (swap! endSleepTime nowFn)
+      ))
+    ))
+    ;(Thread/sleep wait)
     (if (pos? @appRunning) (recur))
   ))
   (println "end of worker")
