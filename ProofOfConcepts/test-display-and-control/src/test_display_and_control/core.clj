@@ -27,7 +27,7 @@
 (defn oncloseHandler
   [event]
   (do
-    (println "onclose")
+    ;(println "onclose")
     (System/exit 0)
   )
 )

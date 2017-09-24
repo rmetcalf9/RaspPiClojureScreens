@@ -9,6 +9,9 @@
 ;Time library documentation
 ;https://github.com/seancorfield/clj-time
 
+;Example of canvas drawing
+;http://jng.imagine27.com/index.php/2009-09-12-122605_pong_in_clojure.html
+
 (defn draw-clock [c g center radius stroke_width]
   (translate g (first center) (last center))
 
@@ -59,6 +62,9 @@
 	(def s (t/second curtime))
 	(def ms (t/milli curtime))
 
+	(def time_string (str h ":" m ":" s))
+	;(println time_string)
+
 	(def mss (+ (* s 1000) ms))
 
 	;Draw second hand
@@ -69,8 +75,27 @@
 	(paint-hand (* minutes_and_seconds (/ 360 (* 60 60))) :blue (* 7 (/ radius 9)) stroke_width)
 
 	;Draw hour hand
-	(def hours_minutes_and_seconds (+ minutes_and_seconds (* h 60 60)))
-	(paint-hand (* hours_minutes_and_seconds (/ 360 (* 60 60 60))) :green (* 3(/ radius 6)) (* stroke_width 2))
+	;Example caculation
+	;At 4pm the values will be:
+	;minutes_and_seconds = 0
+	;hours_minutes_and_seconds = (4 * 60 * 60) + 0 = 14,400
+	;total hours minutes and seconds in 1 rotation = 60 * 60 * 60 = 216,000
+	;angle per hour min and sec = (/ 360 (* 12 60 60)) = 0.0083333333333
+	;angle = 14,400 * 0.0083333333333 = 120
 
+	(def hours_minutes_and_seconds (+ minutes_and_seconds (* h 60 60)))
+	(paint-hand (* hours_minutes_and_seconds (/ 360 (* 12 60 60))) :green (* 3(/ radius 6)) (* stroke_width 2))
+
+
+  ;drawing dummy empty polygon to canvas to change style for drawstring calls
+  (sg/draw g (polygon)
+      (style :foreground (scolor/color :black) :stroke (stroke :width 5))
+  )
+  (.drawString g "Example of writing string to canvas" 0 (+ radius 20))
+  (.drawString g time_string 0 (+ radius 40))
+
+
+  ;reset canvas back to origional settings
+  (translate g (- 0 (first center)) (- 0 (last center)))
 )
 
