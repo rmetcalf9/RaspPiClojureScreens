@@ -15,6 +15,8 @@
 
 ;; #object[java.awt.event.KeyEvent 0x7cb04c5a java.awt.event.KeyEvent[KEY_RELEASED,keyCode=27,keyText=Escape,keyChar=Escape,keyLocation=KEY_LOCATION_STANDARD,rawCode=9,primaryLevelUnicode=27,scancode=0,extendedKeyCode=0x1b] on frame0]
 
+;0 if not running non zero otherwise
+(def appRunning (atom 1))
 
 (defn keyreleaseHandler
   [event]
@@ -24,10 +26,15 @@
   )
 )
 
+
 (defn oncloseHandler
   [event]
   (do
-    ;(println "onclose")
+    (println "Application onclose START")
+    (swap! appRunning dec)
+    ;wait some time to allow threads to complete
+    (Thread/sleep 1000)
+    (println "Application onclose")
     (System/exit 0)
   )
 )
@@ -48,10 +55,39 @@
   )
 )
 
+;timer function runs frequently
+; it will repaint the display 
 ; https://icyrock.com/blog/2012/01/clojure-and-seesaw/q
 ; (timer (fn [e] (repaint! (select f [:#clock])) 1000))))
 (defn timer-fn [timer-state] (do
   (repaint! (select main-window [:#maincanvas]))
+))
+
+
+;To stop screensaver from kicking in simulate pressing and releasing the ctl key
+;https://stackoverflow.com/questions/6178132/fullscreen-java-app-minimizes-when-screensaver-turns-on
+(def robot (new java.awt.Robot))
+(def ctlKey java.awt.event.KeyEvent/VK_CONTROL)
+(defn prevent-screensaver [] (do
+  (.waitForIdle robot)
+  (.keyPress robot ctlKey)
+  (.keyRelease robot ctlKey)
+  (print ".")
+))
+
+;Worker thread that will call any function (fn) repeatadly (with a wait delay) until the app terminates
+(defn worker [fn wait] (do
+  (println "start of worker")
+  (loop [] (do
+    (fn)
+    ;TODO This will only check appRunning once every wait seconds
+    ;    if wait is long this will be a problem - worker may not end
+    ;    instead it should wake up mutiple times during it's wait period and
+    ;    terminate immedatadly if delay is over
+    (Thread/sleep wait)
+    (if (pos? @appRunning) (recur))
+  ))
+  (println "end of worker")
 ))
 
 (defn -main
@@ -62,8 +98,12 @@
   (sc/pack! main-window)
   (sc/show! main-window)
 
-  ;start a timer that runs every half second
+  ;press and unpress ctl key to stop screen saver from starting
+  ;https://stackoverflow.com/questions/1768567/how-does-one-start-a-thread-in-clojure
+  (future (worker prevent-screensaver 10000))
+
+  ;start a timer that runs every half second to repaint screen
   (sc/timer timer-fn :initial-value [0] :delay 50)
 
-  (println "End Execution")
+  (println "End Main Function")
   )
