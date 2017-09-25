@@ -106,7 +106,7 @@
   [& args]
   (println "Start Execution")
   (sc/full-screen! main-window)
-  (sc/pack! main-window)
+  ;(sc/pack! main-window) not needed as we don't need the frame to resize to fit contents
   (sc/show! main-window)
 
   ;press and unpress ctl key to stop screen saver from starting
