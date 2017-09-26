@@ -1,10 +1,21 @@
-(ns test-display-and-control.clock
+(ns test-display-and-control.mod-clock
   (:gen-class)
-  (:use [seesaw.core :as sc]
+  (:require [seesaw.core :as sc]
         [seesaw.graphics :as sg]
         [seesaw.color :as scolor]
         [clj-time.core :as t]
   ))
+
+;Module that provides slides that display a clock
+
+
+(defn describe [] 
+  (hash-map 
+    :module-name "mod-clock", 
+    :module-description "Slides that display a clock"
+  )
+)
+
 
 ;Time library documentation
 ;https://github.com/seancorfield/clj-time
@@ -13,11 +24,11 @@
 ;http://jng.imagine27.com/index.php/2009-09-12-122605_pong_in_clojure.html
 
 (defn draw-clock [c g center radius stroke_width]
-  (translate g (first center) (last center))
+  (sg/translate g (first center) (last center))
 
   ;center square
-  (sg/draw g (rect -2 -2 2 2)
-           (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+  (sg/draw g (sg/rect -2 -2 2 2)
+           (sg/style :foreground (scolor/color :black) :stroke (sg/stroke :width stroke_width))
   )
 
   ;Draw number marks
@@ -26,8 +37,8 @@
 
   (defn paint-tick [num ticksize] (do
     (sg/rotate g (* num (/ 360 12)))
-    (sg/draw g (polygon [0 (- 0 radius)] [0 (- 0 (- radius ticksize))])
-        (style :foreground (scolor/color :black) :stroke (stroke :width stroke_width))
+    (sg/draw g (sg/polygon [0 (- 0 radius)] [0 (- 0 (- radius ticksize))])
+        (sg/style :foreground (scolor/color :black) :stroke (sg/stroke :width stroke_width))
     )
 		;rotate back same amount to reset canvas
     (sg/rotate g (- 0 (* num (/ 360 12))))
@@ -50,8 +61,8 @@
 
 	(defn paint-hand [angle colour length width] (do
     (sg/rotate g angle)
-    (sg/draw g (polygon [0 (- 0 length)] [0 0])
-        (style :foreground (scolor/color colour) :stroke (stroke :width width))
+    (sg/draw g (sg/polygon [0 (- 0 length)] [0 0])
+        (sg/style :foreground (scolor/color colour) :stroke (sg/stroke :width width))
     )
     (sg/rotate g (- 0 angle))
 	))
@@ -88,14 +99,14 @@
 
 
   ;drawing dummy empty polygon to canvas to change style for drawstring calls
-  (sg/draw g (polygon)
-      (style :foreground (scolor/color :black) :stroke (stroke :width 5))
+  (sg/draw g (sg/polygon)
+      (sg/style :foreground (scolor/color :black) :stroke (sg/stroke :width 5))
   )
   (.drawString g "Example of writing string to canvas" 0 (+ radius 20))
   (.drawString g time_string 0 (+ radius 40))
 
 
   ;reset canvas back to origional settings
-  (translate g (- 0 (first center)) (- 0 (last center)))
+  (sg/translate g (- 0 (first center)) (- 0 (last center)))
 )
 

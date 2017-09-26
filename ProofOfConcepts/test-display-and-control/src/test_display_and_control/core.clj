@@ -1,6 +1,6 @@
 (ns test-display-and-control.core
   (:gen-class)
-  (:use [seesaw.core :as sc]
+  (:require [seesaw.core :as sc]
         [seesaw.graphics :as sg]
         [seesaw.color :as scolor]
         [test-display-and-control.paint :as tdcpaint]
@@ -23,7 +23,7 @@
   [event]
   ;; (alert event (str "<html>Hello from <b>Clojure</b>. keyreleaseHandler event  "))
   (if (= (.getKeyCode event) 27) 
-   (dispose! main-window)
+   (sc/dispose! main-window)
   )
 )
 
@@ -59,9 +59,9 @@
 ;timer function runs frequently
 ; it will repaint the display 
 ; https://icyrock.com/blog/2012/01/clojure-and-seesaw/q
-; (timer (fn [e] (repaint! (select f [:#clock])) 1000))))
+; (timer (fn [e] (sc/repaint! (sc/select f [:#clock])) 1000))))
 (defn timer-fn [timer-state] (do
-  (repaint! (select main-window [:#maincanvas]))
+  (sc/repaint! (sc/select main-window [:#maincanvas]))
 ))
 
 
@@ -89,7 +89,7 @@
     ;    instead it should wake up mutiple times during it's wait period and
     ;    terminate immedatadly if delay is over
     (def endSleepTime (atom (t/plus (t/now) (t/millis wait))))
-    (while (before? (t/now) @endSleepTime) (do
+    (while (t/before? (t/now) @endSleepTime) (do
       (Thread/sleep 100)
       (if (not(pos? @appRunning)) (do
         (swap! endSleepTime nowFn)
