@@ -1,9 +1,12 @@
 (ns test-display-and-control.core
   (:gen-class)
-  (:require [seesaw.core :as sc]
+  (:require 
+        [seesaw.core :as sc]
         [seesaw.graphics :as sg]
         [seesaw.color :as scolor]
         [test-display-and-control.paint :as tdcpaint]
+        [test-display-and-control.config :as config]
+        [test-display-and-control.slack :as slack]
         [clj-time.core :as t]
   ))
 
@@ -105,16 +108,23 @@
   "Main entry point for slideshow application"
   [& args]
   (println "Start Execution")
-  (sc/full-screen! main-window)
-  ;(sc/pack! main-window) not needed as we don't need the frame to resize to fit contents
-  (sc/show! main-window)
 
-  ;press and unpress ctl key to stop screen saver from starting
-  ;https://stackoverflow.com/questions/1768567/how-does-one-start-a-thread-in-clojure
-  (future (worker prevent-screensaver 10000))
+  (let [config (config/read-config)]
+    ;(println (config :comm))
+    (slack/start config)
 
-  ;start a timer that runs every half second to repaint screen
-  (sc/timer timer-fn :initial-value [0] :delay 50)
+    (sc/full-screen! main-window)
+    ;(sc/pack! main-window) not needed as we don't need the frame to resize to fit contents
+    (sc/show! main-window)
+
+    ;press and unpress ctl key to stop screen saver from starting
+    ;https://stackoverflow.com/questions/1768567/how-does-one-start-a-thread-in-clojure
+    (future (worker prevent-screensaver 10000))
+
+    ;start a timer that runs every half second to repaint screen
+    (sc/timer timer-fn :initial-value [0] :delay 50)
+
+  )
 
   (println "End Main Function")
   )
