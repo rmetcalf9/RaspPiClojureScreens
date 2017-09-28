@@ -11,6 +11,7 @@
     [org.clojure/core.async "0.1.346.0-17112a-alpha"]
     [clj-http "2.0.1"]
     [cheshire "5.5.0"]
+    [stylefruits/gniazdo "0.4.1"]
   ]
   :main ^:skip-aot test-display-and-control.core
   :target-path "target/%s"

@@ -114,7 +114,7 @@
     (slack/start config)
 
     ;TODO comment out full-screen to make debugging easier (you can see console and window together)
-    (sc/full-screen! main-window)
+    ;;;(sc/full-screen! main-window)
 
     ;(sc/pack! main-window) not needed as we don't need the frame to resize to fit contents
     (sc/show! main-window)
