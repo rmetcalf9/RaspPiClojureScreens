@@ -5,6 +5,7 @@
     [cheshire.core :refer [parse-string generate-string]]
     [clj-http.client :as http]
     [gniazdo.core :as ws]
+    [clojure.core.async :as async :refer [>! <! go go-loop]]
   )
 )
 
@@ -42,9 +43,7 @@
     [in out])
 )
 
-;worker that runs in seperate thread
-(defn worker [{:keys [api-token]}] (do
-  (println "slack worker started")
+(defn get-comm-channel [api-token] (do
   (let [cin (async/chan 10)
         cout (async/chan 10)
         {:keys [botname url]} (get-websocket-info api-token)
@@ -116,14 +115,80 @@
     
 
   )
+))
+
+
+(defn safe-resolve [kw]
+  (let [user-ns (symbol (namespace kw))
+        user-fn (symbol (name kw))]
+    (try
+      (ns-resolve user-ns user-fn)
+      (catch Exception e
+        (require user-ns)
+        (ns-resolve user-ns user-fn)))))
+
+
+(defn kw->fn [kw]
+  (try
+    (safe-resolve kw)
+    (catch Throwable e
+      (throw (ex-info "Could not resolve symbol on classpath" {:kw kw})))))
+
+ (defn make-comm [id api-token]
+   (let [f (kw->fn id)] 
+     (f api-token)))
+
+;worker
+(defn worker [{:keys [api-token]} recieved-message-function] (do
+  (println "slack worker started")
+  (let [
+        inst-comm (fn []
+                    (println ":: building com:")
+                    (make-comm (":slack-api.core/get-comm-channel") api-token))
+     ]
+    (go-loop [[in out stop] (inst-comm)]
+      (println ":: waiting for input")
+    )
+  )
+
+;    (go-loop [[in out stop] (inst-comm)]
+;      (println ":: waiting for input")
+;      (if-let [form (<! in)]
+
+;         (let [input (:input form)]
+;           (recieved-message-function input)
+;         )
+
+;        (let [input (:input form)
+;              res (recieved-message-function input)]
+;TODO Replace this part - this is not how we want to send responses
+;          (println ":: form >> " input)
+;          (println ":: => " res)
+;          (>! out (assoc form :evaluator/result res))
+;          (recur [in out stop])
+;        )
+
+;        ;; something wrong happened, re init
+;        (do
+;          (println ":: WARNING! The comms went down, going to restart.")
+;          (stop)
+;          (<! (async/timeout 3000))
+;          (recur (inst-comm)))))
+
+;    (.join (Thread/currentThread))
+;  )
+
   (println "slack worker ended")
 ))
 
 (defn start
-  [config]
+  [config recieved-message-function]
   ;(future (worker config))
   
-  ;TODO Workout if future is needed or do the async queues handle this?
-  (worker config)
+  (do
+    ;TODO Workout if future is needed or do the async queues handle this?
+    (worker config recieved-message-function)
+
+  )
 )
 

@@ -5,8 +5,13 @@
   )
   )
 
+(defn recieved-message [msg] (do
+  (println "Rec msg")
+  (println msg)
+))
+
 (defn start
   [config]
-  (slack-api/start config)
+  (slack-api/start config recieved-message)
 )
 
