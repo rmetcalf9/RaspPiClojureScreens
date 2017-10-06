@@ -6,11 +6,14 @@
     [clj-http.client :as http]
     [gniazdo.core :as ws]
     [clojure.core.async :as async :refer [>! <! go go-loop]]
+	[clojure.string :as str]
   )
   (:import 
     java.io.StringWriter
   )
 )
+
+(def verbose-output false)
 
 ;*****************
 ;Tmp code added to try and debug No implementation of method: :take! of protocol error
@@ -33,24 +36,6 @@
                 (or (:result r) "Unknown Error")
                 "```")))))
 
-(def sb (fn[] "ABC"))
-(defn eval-expr
-  "XXXXEvaluate the given string"
-  [s]
-  (try
-    (with-open [out (StringWriter.)]
-      (let [form (binding [*read-eval* false] (read-string s))
-            result (sb form {#'*out* out})]
-        {:status true
-         :input s
-         :form form
-         :result result
-         :output (.toString out)}))
-    (catch Exception e
-      {:status false
-       :input s
-       :result (.getMessage e)})))
-
 ;*****************
 ;End ot tmp code
 ;*****************
@@ -61,11 +46,9 @@
                                                :no_unreads true}
                                 :as :json})
                      :body)]
-;     (println "Got response for rtm start")
-;     (println (:ok response))
-;     (println (:url response))
+;     (println response) ;use this line to dump the recieved data to help write code to extract relevant data
     (when (:ok response)
-      {:botname (:name (:self response)) :url (:url response)}
+      {:botid (:id (:self response)) :botname (:name (:self response)) :url (:url response)}
     )
   )
 ) ;defn get-websocket-into
@@ -89,12 +72,38 @@
     [in out])
 ) ;defn connect-socket
 
+;I want my slack API to pre-caculate some date for me
+(defn enrich-recieved-message
+  "Given a message from slack, enrich it with extra info"
+  [message-from-slack name-of-this-bot id-of-this-bot]
+  (let [
+      lcasemsgtext (if (str/blank? (:text message-from-slack)) "" (str/lower-case (:text message-from-slack)))
+    ]
+    {
+      :origmsg message-from-slack
+  	  :id-of-this-bot id-of-this-bot
+  	  :name-of-this-bot name-of-this-bot
+	  :is-message-for-my-attention (if (= (:type message-from-slack) "message") 
+	    (if (str/starts-with? lcasemsgtext "all") 
+	      true  ;starts with all then needs attention
+		  (if (str/starts-with? (:text message-from-slack) (str "<@" id-of-this-bot ">")) ;TODO need to search for <@U7F92UZ4N> in :text
+		    true
+			false ;not all, dosen't start with @ my name
+		  )
+  	    )
+	    false ;type is not message - so not a message to this bot
+	  )
+	  :actual_text "TODO - remove all or <@X> from start of message"
+    }
+   ) ;let
+)
+
 (defn get-comm-channel 
   "Given an api-token return a com channel with input and output functions [cin cout stop]"
   [api-token]
   (let [cin (async/chan 10)
         cout (async/chan 10)
-        {:keys [botname url]} (get-websocket-info api-token)
+        {:keys [botid botname url]} (get-websocket-info api-token)
         counter (atom 0)
         next-id (fn []
                   (swap! counter inc))
@@ -107,7 +116,9 @@
       (throw (ex-info "Could not get RTM Websocket URL" {}))
     ))
 
-    (println ":: got websocket url:" url)
+    (if verbose-output 
+	  (println ":: got websocket url:" url)
+	)
     (println ":: Name of this bot is:" botname)
 
     ;; start a loop to process messages
@@ -116,14 +127,15 @@
               to (mk-timeout)]
       ;; get whatever needs to be done for either data coming from the socket
       ;; or from the user
-	  (println "Debug - go loop")
       (let [[v p] (async/alts! [cout in to])]
         ;; if something goes wrong, just die for now
         ;; we should do something smarter, may be try and reconnect
         (if (= p to)
           ;; time to ping
           (do
-            (println ":: ping? pending pings:" ping-count)
+            (if verbose-output 
+			  (println ":: ping? pending pings:" ping-count)
+			)
             (async/>! out {:id   (next-id)
                            :type "ping"
                            :ts   (System/currentTimeMillis)})
@@ -145,13 +157,14 @@
 							   }
                 )
 
-                ;; the websocket has sent us something, figure out if its of interest
-                ;; to us, and if it is, send it to the evaluator
+                ;; the websocket has sent us something
                 (do
-                  (println ":: incoming:" v)
                   (if (= (:type v) "pong")
-                    (println ":: pong! latency: " (- (System/currentTimeMillis) (:ts v)) "ms.")
-                    (println "TODO code to handle incomming messages from SLACK")
+                    (if verbose-output 
+					  (println ":: pong! latency: " (- (System/currentTimeMillis) (:ts v)) "ms.")
+					  (print "") ;error if i don't print something - I don't know why
+					)
+                    (async/>! cin (enrich-recieved-message v botname botid))
                   )
                 ))
               (recur [in out]
@@ -178,8 +191,11 @@
          inst-comm (fn[] (get-comm-channel api-token))
      ]
     (go-loop [[in out stop] (inst-comm)]
-      (if-let [form (<! in)] ;this line gives me "No implementation of method: :take! of protocol:" (because in='x')
-	     (println "debug worker taken form")
+      (if-let [form (<! in)] 
+	     (do
+		  (recieved-message-function form)
+          (recur [in out stop])
+		 )
 ;        (let [input (:input form)
 ;		       res (eval-expr input)
 ;              ]
@@ -189,11 +205,12 @@
 ;		) ;let
 		
         ;; something wrong happened, re init
-;        (do
-;          (println ":: WARNING! The comms went down, going to restart.")
-;          (stop)
-;          (<! (async/timeout 3000))
-;          (recur (inst-comm)))
+        (do
+          (println ":: WARNING! The comms went down, going to restart.")
+          (stop)
+          (<! (async/timeout 3000))
+          (recur (inst-comm))
+		 )
 	  ) ;if-let
     ) ;go-loop
 	;(.join (Thread/currentThread))

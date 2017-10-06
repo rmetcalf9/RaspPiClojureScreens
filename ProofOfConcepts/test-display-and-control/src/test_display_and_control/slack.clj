@@ -6,8 +6,10 @@
   )
 
 (defn recieved-message [msg] (do
-  (println "Rec msg")
-  (println msg)
+  (if (:is-message-for-my-attention msg) (do
+    (println "Rec msg for my attention")
+    (println msg)
+  ))
 ))
 
 (defn start
