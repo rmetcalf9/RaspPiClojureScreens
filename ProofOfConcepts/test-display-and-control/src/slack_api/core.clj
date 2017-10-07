@@ -72,29 +72,81 @@
     [in out])
 ) ;defn connect-socket
 
-;I want my slack API to pre-caculate some date for me
+(defn remove-particular-start
+  "Given a sgtring remove a prefix if it is present. Return an indicator to show if it was removed as well as the resultant string"
+  [input-string prefix-to-remove]
+    (if (str/starts-with? (str/lower-case input-string) (str/lower-case (str prefix-to-remove " ")))
+      [true (subs input-string (+ 1 (count prefix-to-remove)))]
+      [false input-string]
+    )
+)
+
+;enrich message recieved from slack with some common information
+; work out if it is a message or presense indicator or something else;
+;  if it is a message work out if it is for this bot
+;  remove the prefix
+;this eavoids doing this caculation in caller
 (defn enrich-recieved-message
   "Given a message from slack, enrich it with extra info"
   [message-from-slack name-of-this-bot id-of-this-bot]
   (let [
       lcasemsgtext (if (str/blank? (:text message-from-slack)) "" (str/lower-case (:text message-from-slack)))
     ]
-    {
-      :origmsg message-from-slack
-  	  :id-of-this-bot id-of-this-bot
-  	  :name-of-this-bot name-of-this-bot
-	  :is-message-for-my-attention (if (= (:type message-from-slack) "message") 
-	    (if (str/starts-with? lcasemsgtext "all") 
-	      true  ;starts with all then needs attention
-		  (if (str/starts-with? (:text message-from-slack) (str "<@" id-of-this-bot ">")) ;TODO need to search for <@U7F92UZ4N> in :text
-		    true
-			false ;not all, dosen't start with @ my name
-		  )
-  	    )
-	    false ;type is not message - so not a message to this bot
-	  )
-	  :actual_text "TODO - remove all or <@X> from start of message"
-    }
+    (if (= (:type message-from-slack) "message") 
+
+      ;This point of the code is reached if it is a message
+      ;now use a let to try and remove all from the start.
+      ;if it is not sucessfully removed try and remove this bot id
+      ;otherwise we know it isn't a message for this bot
+
+      (let [
+           [is-all message-without-all-prefix] (remove-particular-start (:text message-from-slack) "all")
+         ]
+         (if is-all
+          { ;slack message all
+            :origmsg message-from-slack
+  	        :id-of-this-bot id-of-this-bot
+  	        :name-of-this-bot name-of-this-bot
+    	      :is-message-for-my-attention true
+    	      :is-message-broadcast true
+	          :actual_text message-without-all-prefix
+          }
+          (let [
+               [is-bot message-without-botid-prefix] (remove-particular-start (:text message-from-slack) (str "<@" id-of-this-bot ">"))
+             ]
+             (if is-bot
+               { ;slack message for this bot
+                 :origmsg message-from-slack
+  	             :id-of-this-bot id-of-this-bot
+  	             :name-of-this-bot name-of-this-bot
+                 :is-message-for-my-attention true
+    	           :is-message-broadcast false
+	               :actual_text message-without-botid-prefix
+               }
+               { ;slack message not for this bot, and not for all
+                 :origmsg message-from-slack
+  	             :id-of-this-bot id-of-this-bot
+  	             :name-of-this-bot name-of-this-bot
+                 :is-message-for-my-attention false
+    	           :is-message-broadcast false
+	               :actual_text (:text message-from-slack)
+               }
+             )
+          )
+         )
+      )
+
+      ;slack message type NOT ismessage so we 
+      { 
+        :origmsg message-from-slack
+  	    :id-of-this-bot id-of-this-bot
+  	    :name-of-this-bot name-of-this-bot
+	      :is-message-for-my-attention false
+ 	      :is-message-broadcast false
+        :actual_text "" ;not a message so no actual text
+      }
+
+    )
    ) ;let
 )
 
