@@ -46,7 +46,7 @@
                                                :no_unreads true}
                                 :as :json})
                      :body)]
-;     (println response) ;use this line to dump the recieved data to help write code to extract relevant data
+     ;(println response) ;use this line to dump the recieved data to help write code to extract relevant data
     (when (:ok response)
       {:botid (:id (:self response)) :botname (:name (:self response)) :url (:url response)}
     )
@@ -202,10 +202,10 @@
 			(do
               (if (= p cout)
                 ;; the user sent us something, time to send it to the remote end point
-                (async/>! out {:id      (next-id) :type "message"
+                (async/>! out {:id      (next-id) 
+				               :type "message"
                                :channel (get-in v [:meta :channel])
-                               :text    (-> v
-                                            format-result-for-slack) ;TODO Replace this section with code to send outgoing messages to slack
+                               :text    (-> v format-result-for-slack) ;TODO Replace this section with code to send outgoing messages to slack
 							   }
                 )
 
@@ -235,6 +235,16 @@
   ) ;let
 ) ;defn get-comm-channel
 
+(defn send-message-to-channel
+  "Function to send a message to a particular channel"
+  [out channel message-string]
+  (out [channel message-string])
+)
+(defn message-reply-function
+  "Function to reply to a message"
+  [out msg reply-message-string]
+  (send-message-to-channel out (:channel (:origmsg msg)) reply-message-string)
+)
 
 ;worker
 (defn worker [{:keys [api-token]} recieved-message-function] (do
@@ -243,9 +253,9 @@
          inst-comm (fn[] (get-comm-channel api-token))
      ]
     (go-loop [[in out stop] (inst-comm)]
-      (if-let [form (<! in)] 
+        (if-let [form (<! in)] 
 	     (do
-		  (recieved-message-function form)
+		  (recieved-message-function form (partial message-reply-function (fn [a] (println a))))
           (recur [in out stop])
 		 )
 ;        (let [input (:input form)
@@ -263,7 +273,7 @@
           (<! (async/timeout 3000))
           (recur (inst-comm))
 		 )
-	  ) ;if-let
+       ) ;if-let
     ) ;go-loop
 	;(.join (Thread/currentThread))
   )

@@ -5,10 +5,11 @@
   )
   )
 
-(defn recieved-message [msg] (do
+(defn recieved-message [msg replyfn] (do
   (if (:is-message-for-my-attention msg) (do
     (println "Rec msg for my attention")
     (println msg)
+	(replyfn msg "This is a test reply")
   ))
 ))
 
