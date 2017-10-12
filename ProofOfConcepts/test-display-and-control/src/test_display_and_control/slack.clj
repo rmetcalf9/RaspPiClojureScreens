@@ -15,12 +15,9 @@
 
 (defn start
   [config]
-  (let [send-fn (slack-api/start config recieved-message)]
-    (Thread/sleep 5200) 
-    (println "A")
-    (println send-fn)
-    ;(send-fn {:channel "a" :message-string "Hello everyone!"})
-    (println "Z")
+  (let [[send-fn] (slack-api/start config recieved-message)]
+    ;TODO we need to derive the channel we need to send the message to
+    (send-fn {:channel "a" :message-string "Hello everyone!"})
   )
   
 )

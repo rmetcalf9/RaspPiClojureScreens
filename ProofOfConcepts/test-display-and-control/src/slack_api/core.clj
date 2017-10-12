@@ -77,7 +77,6 @@
           :text    (:message-string msg)
         }	  
       ]
-	    (println msg)
 		(send-message-to-socket socket slack-msg)
       )
 
@@ -290,9 +289,7 @@
 (defn send-message-to-channel
   "Function to send a message to a particular channel"
   [queue-of-messages-to-send {:keys [channel message-string]}]
-  (do (println "send-message-to-channel called")
   (manifold/put! queue-of-messages-to-send {:channel channel :message-string message-string})
-  )
 )
 (defn message-reply-function
   "Function to reply to a message"
@@ -338,25 +335,17 @@
   (println "slack worker setup complete")
 ))
 
+
 (defn start
   [config recieved-message-function]
   
   (do
     (def queue-of-messages-to-send (manifold/stream))
    
-    ;(future (worker config))
-    ;TODO Workout if future is needed or do the async queues handle this?
     (worker config recieved-message-function queue-of-messages-to-send)
-
   )
-  
-  ;reply to caller with a function they can use to send messages
-  
-  
-  ;(def x (partial send-message-to-channel queue-of-messages-to-send))
-  ;(x {:channel "a" :message-string "xxxxxHello everyone!"})
-  
+
+  ;return a function to the caller to allow them to send messages to slack
   [(partial send-message-to-channel queue-of-messages-to-send)]
-  ;[(partial fffff "A")]
 )
 
