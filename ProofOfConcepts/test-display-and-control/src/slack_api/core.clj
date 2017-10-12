@@ -56,7 +56,33 @@
   )
 ) ;defn get-websocket-into
 
-(defn connect-socket [url]
+(defn send-message-to-socket [socket orig-msg]
+  (let [
+      counter (atom 0)
+      next-id (fn [] (swap! counter inc))
+	  msg-with-id (assoc orig-msg :id (next-id))
+    ]
+	(ws/send-msg socket (generate-string msg-with-id))
+  )
+) ;send-message-to-socket
+
+(defn worker-to-send-messages-from-queue [socket queue-of-messages-to-send]
+  "Worker thread that will send pending messages"
+  (loop [] 
+    (do
+      (println @(lamina/read-channel queue-of-messages-to-send))
+	  (Thread/sleep 200) ;only send outgoing messages 5 times a second
+      (recur)
+	)
+  )
+)
+
+;    (defn consumer []
+;       (loop-forever
+;         (fn [] (println @(lamina/read-channel ch))))
+;		 )
+
+(defn connect-socket [url queue-of-messages-to-send]
   (let [in (async/chan)
         out (async/chan)
         socket (ws/connect
@@ -67,18 +93,19 @@
                  :on-error
                  (fn [_]
                    (async/close! in)))]
-    (go-loop []
-      (let [
-          counter (atom 0)
-          next-id (fn [] (swap! counter inc))
-	      orig-msg (async/<! out)
-		  msg-with-id (assoc orig-msg :id (next-id))
-	    ]
-	    (do
-		  ;(println (str "Sending id " (:id msg-with-id)))
-          (ws/send-msg socket (generate-string msg-with-id))
-          (recur)
-		)
+
+    (do
+	  (-> (Thread. (fn [] (worker-to-send-messages-from-queue socket queue-of-messages-to-send))) .start)
+      (go-loop []
+        (let [
+	        orig-msg (async/<! out)
+	      ]
+	      (do
+		    ;(println (str "Sending id " (:id msg-with-id)))
+            (send-message-to-socket socket orig-msg)
+            (recur)
+		  )
+	     )
 	   )
 	 )
     [in out])
@@ -164,7 +191,7 @@
 
 (defn get-comm-channel 
   "Given an api-token return a com channel with input and output functions [cin cout stop]"
-  [api-token]
+  [api-token queue-of-messages-to-send]
   (let [cin (async/chan 10)
         cout (async/chan 10)
         {:keys [botid botname url]} (get-websocket-info api-token)
@@ -183,7 +210,7 @@
     (println ":: Name of this bot is:" botname)
 
     ;; start a loop to process messages
-    (go-loop [[in out] (connect-socket url)
+    (go-loop [[in out] (connect-socket url queue-of-messages-to-send)
               ping-count 0
               to (mk-timeout)]
       ;; get whatever needs to be done for either data coming from the socket
@@ -263,7 +290,7 @@
 (defn worker [{:keys [api-token]} recieved-message-function queue-of-messages-to-send] (do
   (println "slack worker started")
   (let [
-         inst-comm (fn[] (get-comm-channel api-token))
+         inst-comm (fn[] (get-comm-channel api-token queue-of-messages-to-send))
      ]
     (go-loop [[in out stop] (inst-comm)]
 	  (do
@@ -272,13 +299,14 @@
 		  (recieved-message-function form (partial message-reply-function queue-of-messages-to-send))
           (recur [in out stop])
 		 )
-;        (let [input (:input form)
-;		       res (eval-expr input)
-;              ]
-;          (println ":: form >> " input)
-;          (>! out (assoc form :evaluator/result "ABC"))
-;          (recur [in out stop])
-;		) ;let
+		 ;worker is no longer sending messages back using the out channel
+		 ; if we did want to we would use code like this:
+         ;        (let [input (:input form)
+		 ;		       res (eval-expr input)
+		 ;          (println ":: form >> " input)
+		 ;          (>! out (assoc form :evaluator/result "ABC"))
+		 ;          (recur [in out stop])
+		 ;		) ;let
 		
         ;; something wrong happened, re init
         (do
@@ -302,6 +330,7 @@
   
   (do
     (def queue-of-messages-to-send (lamina/channel))
+   
     ;(future (worker config))
     ;TODO Workout if future is needed or do the async queues handle this?
     (worker config recieved-message-function queue-of-messages-to-send)
