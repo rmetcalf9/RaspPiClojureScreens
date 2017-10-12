@@ -15,6 +15,13 @@
 
 (defn start
   [config]
-  (slack-api/start config recieved-message)
+  (let [send-fn (slack-api/start config recieved-message)]
+    (Thread/sleep 5200) 
+    (println "A")
+    (println send-fn)
+    ;(send-fn {:channel "a" :message-string "Hello everyone!"})
+    (println "Z")
+  )
+  
 )
 

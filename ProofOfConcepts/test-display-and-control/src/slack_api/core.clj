@@ -7,9 +7,8 @@
     [gniazdo.core :as ws]
     [clojure.core.async :as async :refer [>! <! go go-loop]]
 	[clojure.string :as str]
-	[lamina.core :as lamina] ;provides functionality like blocking queue - https://adambard.com/blog/why-clojure-part-2-async-magic/
-	                       ;this library is depreciated TODO update to manifold
-						   ;https://github.com/ztellman/manifold
+;	[lamina.core :as lamina] ;moved to manifold as lamina is depreciated
+    [manifold.stream :as manifold] ;https://github.com/ztellman/manifold
   )
   (:import 
     java.io.StringWriter
@@ -61,9 +60,8 @@
       counter (atom 0)
       next-id (fn [] (swap! counter inc))
 	  msg-with-id (assoc orig-msg :id (next-id))
-    ] (do (println (str "send to chan:" (:channel msg-with-id)))
+    ]
 	(ws/send-msg socket (generate-string msg-with-id))
-	)
   )
 ) ;send-message-to-socket
 
@@ -72,13 +70,14 @@
   (loop [] 
     (do
       (let [
-	    msg @(lamina/read-channel queue-of-messages-to-send)
+		msg @(manifold/take! queue-of-messages-to-send)
 		slack-msg {
           :type "message"
           :channel (:channel msg)
           :text    (:message-string msg)
         }	  
       ]
+	    (println msg)
 		(send-message-to-socket socket slack-msg)
       )
 
@@ -257,7 +256,7 @@
                   (async/>! out {
 				               :type "message"
                                :channel (get-in v [:meta :channel])
-                               :text    (-> v format-result-for-slack) ;TODO Replace this section with code to send outgoing messages to slack
+                               :text    "Not Used Code" ;TODO Replace this section with code to send outgoing messages to slack
 							   }
                   )
 
@@ -290,13 +289,15 @@
 
 (defn send-message-to-channel
   "Function to send a message to a particular channel"
-  [queue-of-messages-to-send channel message-string]
-  (lamina/enqueue queue-of-messages-to-send {:channel channel :message-string message-string})
+  [queue-of-messages-to-send {:keys [channel message-string]}]
+  (do (println "send-message-to-channel called")
+  (manifold/put! queue-of-messages-to-send {:channel channel :message-string message-string})
+  )
 )
 (defn message-reply-function
   "Function to reply to a message"
   [queue-of-messages-to-send msg reply-message-string]
-  (send-message-to-channel queue-of-messages-to-send (:channel (:origmsg msg)) reply-message-string)
+  (send-message-to-channel queue-of-messages-to-send {:channel (:channel (:origmsg msg)) :message-string reply-message-string})
 )
 
 ;worker
@@ -334,20 +335,28 @@
 	;(.join (Thread/currentThread))
   )
 
-
-  (println "slack worker ended")
+  (println "slack worker setup complete")
 ))
 
 (defn start
   [config recieved-message-function]
   
   (do
-    (def queue-of-messages-to-send (lamina/channel))
+    (def queue-of-messages-to-send (manifold/stream))
    
     ;(future (worker config))
     ;TODO Workout if future is needed or do the async queues handle this?
     (worker config recieved-message-function queue-of-messages-to-send)
 
   )
+  
+  ;reply to caller with a function they can use to send messages
+  
+  
+  ;(def x (partial send-message-to-channel queue-of-messages-to-send))
+  ;(x {:channel "a" :message-string "xxxxxHello everyone!"})
+  
+  [(partial send-message-to-channel queue-of-messages-to-send)]
+  ;[(partial fffff "A")]
 )
 
