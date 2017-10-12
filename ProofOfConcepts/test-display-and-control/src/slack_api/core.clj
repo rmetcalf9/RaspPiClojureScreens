@@ -16,7 +16,7 @@
   )
 )
 
-(def verbose-output true)
+(def verbose-output false)
 
 ;*****************
 ;Tmp code added to try and debug No implementation of method: :take! of protocol error
@@ -61,8 +61,9 @@
       counter (atom 0)
       next-id (fn [] (swap! counter inc))
 	  msg-with-id (assoc orig-msg :id (next-id))
-    ]
+    ] (do (println (str "send to chan:" (:channel msg-with-id)))
 	(ws/send-msg socket (generate-string msg-with-id))
+	)
   )
 ) ;send-message-to-socket
 
@@ -70,8 +71,20 @@
   "Worker thread that will send pending messages"
   (loop [] 
     (do
-      (println @(lamina/read-channel queue-of-messages-to-send))
+      (let [
+	    msg @(lamina/read-channel queue-of-messages-to-send)
+		slack-msg {
+          :type "message"
+          :channel (:channel msg)
+          :text    (:message-string msg)
+        }	  
+      ]
+		(send-message-to-socket socket slack-msg)
+      )
+
 	  (Thread/sleep 200) ;only send outgoing messages 5 times a second
+	                    ; don't worry about one at a time - this will have
+						; the effect of throttleing the output
       (recur)
 	)
   )
@@ -278,7 +291,7 @@
 (defn send-message-to-channel
   "Function to send a message to a particular channel"
   [queue-of-messages-to-send channel message-string]
-  (lamina/enqueue queue-of-messages-to-send [channel message-string])
+  (lamina/enqueue queue-of-messages-to-send {:channel channel :message-string message-string})
 )
 (defn message-reply-function
   "Function to reply to a message"

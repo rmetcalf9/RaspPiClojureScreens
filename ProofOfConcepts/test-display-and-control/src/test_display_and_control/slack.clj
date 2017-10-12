@@ -9,7 +9,7 @@
   (if (:is-message-for-my-attention msg) (do
     (println "Rec msg for my attention")
     (println msg)
-	(replyfn msg "This is a test reply")
+	(replyfn msg (str "This is a test reply to msg: " (:actual_text msg)))
   ))
 ))
 
