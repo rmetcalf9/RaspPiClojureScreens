@@ -16,7 +16,7 @@
   )
 )
 
-(def verbose-output false)
+(def verbose-output true)
 
 ;*****************
 ;Tmp code added to try and debug No implementation of method: :take! of protocol error
@@ -68,10 +68,19 @@
                  (fn [_]
                    (async/close! in)))]
     (go-loop []
-      (let [m (async/<! out)
-            s (generate-string m)]
-        (ws/send-msg socket s)
-        (recur)))
+      (let [
+          counter (atom 0)
+          next-id (fn [] (swap! counter inc))
+	      orig-msg (async/<! out)
+		  msg-with-id (assoc orig-msg :id (next-id))
+	    ]
+	    (do
+		  ;(println (str "Sending id " (:id msg-with-id)))
+          (ws/send-msg socket (generate-string msg-with-id))
+          (recur)
+		)
+	   )
+	 )
     [in out])
 ) ;defn connect-socket
 
@@ -159,9 +168,6 @@
   (let [cin (async/chan 10)
         cout (async/chan 10)
         {:keys [botid botname url]} (get-websocket-info api-token)
-        counter (atom 0)
-        next-id (fn []
-                  (swap! counter inc))
         shutdown (fn []
                    (async/close! cin)
                    (async/close! cout))
@@ -191,7 +197,7 @@
             (if verbose-output 
 			  (println ":: ping? pending pings:" ping-count)
 			)
-            (async/>! out {:id   (next-id)
+            (async/>! out {
                            :type "ping"
                            :ts   (System/currentTimeMillis)})
             (if (> ping-count 5)
@@ -206,7 +212,9 @@
 			  (do
                 (if (= p cout)
                   ;; the worker sent us something, time to send it to the remote end point
-                  (async/>! out {:id      (next-id) 
+				  ;; after RJM re-write the worker no longer sends messages this way. Instead
+				  ;; they are sent to the queue and processed by the worker started from connect-socket
+                  (async/>! out {
 				               :type "message"
                                :channel (get-in v [:meta :channel])
                                :text    (-> v format-result-for-slack) ;TODO Replace this section with code to send outgoing messages to slack
