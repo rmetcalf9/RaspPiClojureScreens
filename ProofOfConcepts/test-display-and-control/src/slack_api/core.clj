@@ -7,6 +7,9 @@
     [gniazdo.core :as ws]
     [clojure.core.async :as async :refer [>! <! go go-loop]]
 	[clojure.string :as str]
+	[lamina.core :as lamina] ;provides functionality like blocking queue - https://adambard.com/blog/why-clojure-part-2-async-magic/
+	                       ;this library is depreciated TODO update to manifold
+						   ;https://github.com/ztellman/manifold
   )
   (:import 
     java.io.StringWriter
@@ -193,32 +196,34 @@
                            :ts   (System/currentTimeMillis)})
             (if (> ping-count 5)
               (recur (connect-socket url) 0 (mk-timeout))
-              (recur [in out] (inc ping-count) (mk-timeout))))
-          (if (nil? v)
-            (do
-              (println "A channel returned nil, may be its dead? Leaving loop.")
-              (shutdown)
-			)
-			(do
-              (if (= p cout)
-                ;; the user sent us something, time to send it to the remote end point
-                (async/>! out {:id      (next-id) 
+              (recur [in out] (inc ping-count) (mk-timeout)))
+		   ) ;end of ping code
+           (if (nil? v)
+              (do
+                (println "A channel returned nil, may be its dead? Leaving loop.")
+                (shutdown)
+			  )
+			  (do
+                (if (= p cout)
+                  ;; the worker sent us something, time to send it to the remote end point
+                  (async/>! out {:id      (next-id) 
 				               :type "message"
                                :channel (get-in v [:meta :channel])
                                :text    (-> v format-result-for-slack) ;TODO Replace this section with code to send outgoing messages to slack
 							   }
-                )
-
-                ;; the websocket has sent us something
-                (do
-                  (if (= (:type v) "pong")
-                    (if verbose-output 
-					  (println ":: pong! latency: " (- (System/currentTimeMillis) (:ts v)) "ms.")
-					  (print "") ;error if i don't print something - I don't know why
-					)
-                    (async/>! cin (enrich-recieved-message v botname botid))
                   )
-                ))
+
+                  ;; the websocket has sent us something
+                  (do
+                    (if (= (:type v) "pong")
+                      (if verbose-output 
+			            (println ":: pong! latency: " (- (System/currentTimeMillis) (:ts v)) "ms.")
+					    (print "") ;error if i don't print something - I don't know why
+					  )
+                      (async/>! cin (enrich-recieved-message v botname botid))
+                    )
+                  )
+				)
               (recur [in out]
                      (if (= (:type v) "pong")
                        (dec ping-count) ping-count)
@@ -237,25 +242,26 @@
 
 (defn send-message-to-channel
   "Function to send a message to a particular channel"
-  [out channel message-string]
-  (out [channel message-string])
+  [queue-of-messages-to-send channel message-string]
+  (lamina/enqueue queue-of-messages-to-send [channel message-string])
 )
 (defn message-reply-function
   "Function to reply to a message"
-  [out msg reply-message-string]
-  (send-message-to-channel out (:channel (:origmsg msg)) reply-message-string)
+  [queue-of-messages-to-send msg reply-message-string]
+  (send-message-to-channel queue-of-messages-to-send (:channel (:origmsg msg)) reply-message-string)
 )
 
 ;worker
-(defn worker [{:keys [api-token]} recieved-message-function] (do
+(defn worker [{:keys [api-token]} recieved-message-function queue-of-messages-to-send] (do
   (println "slack worker started")
   (let [
          inst-comm (fn[] (get-comm-channel api-token))
      ]
     (go-loop [[in out stop] (inst-comm)]
+	  (do
         (if-let [form (<! in)] 
 	     (do
-		  (recieved-message-function form (partial message-reply-function (fn [a] (println a))))
+		  (recieved-message-function form (partial message-reply-function queue-of-messages-to-send))
           (recur [in out stop])
 		 )
 ;        (let [input (:input form)
@@ -274,6 +280,7 @@
           (recur (inst-comm))
 		 )
        ) ;if-let
+	 )
     ) ;go-loop
 	;(.join (Thread/currentThread))
   )
@@ -284,11 +291,12 @@
 
 (defn start
   [config recieved-message-function]
-  ;(future (worker config))
   
   (do
+    (def queue-of-messages-to-send (lamina/channel))
+    ;(future (worker config))
     ;TODO Workout if future is needed or do the async queues handle this?
-    (worker config recieved-message-function)
+    (worker config recieved-message-function queue-of-messages-to-send)
 
   )
 )

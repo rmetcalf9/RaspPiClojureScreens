@@ -12,6 +12,7 @@
     [clj-http "2.0.1"]
     [cheshire "5.5.0"]
     [stylefruits/gniazdo "0.4.1"]
+	[lamina "0.5.6"]
   ]
   :main ^:skip-aot test-display-and-control.core
   :target-path "target/%s"
