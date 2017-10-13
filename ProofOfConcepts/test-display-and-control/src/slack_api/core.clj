@@ -15,10 +15,6 @@
   )
 )
 
-(defn set-new-atom-value [atom newval] (
-  swap! atom (fn [arg1 arg2] arg2) newval)
-)
-
 (def verbose-output false)
 
 (defn get-websocket-info [api-token]
@@ -288,7 +284,7 @@
   
   (def recieved-slack-vars (atom {}))
   (defn set-recieved-slack-vars [newval] (
-    set-new-atom-value recieved-slack-vars newval)
+    reset! recieved-slack-vars newval)
   )
  ; (set-recieved-slack-vars rec-slack-vars)
  
