@@ -10,7 +10,12 @@
         [clj-time.core :as t]
   ))
 
-
+;create a list of functions we should call when the app 
+;will close down
+;functions will have no paramaters
+(def close-down-notificaiton-functions (atom []))
+(defn register-function-for-close-down-notification [fn] (swap! close-down-notificaiton-functions concat [fn]))
+  
 ;forward declaration
 (def main-window)
 
@@ -36,6 +41,10 @@
   (do
     (println "Application onclose START")
     (swap! appRunning dec)
+	
+	;execute all our close down functions
+	(doseq [i @close-down-notificaiton-functions] (i) )
+	
     ;wait some time to allow threads to complete
     (Thread/sleep 1000)
     (println "Application onclose")
@@ -110,9 +119,11 @@
   (println "Start Execution")
 
   (let [config (config/read-config)]
-    ;(println (config :comm))
-    (slack/start config)
 
+    ;(println (config :comm))
+    (def slack-ret (slack/start config))
+	(register-function-for-close-down-notification (:onclosehandler slack-ret))
+	
     ;TODO comment out full-screen to make debugging easier (you can see console and window together)
     (sc/full-screen! main-window)
 

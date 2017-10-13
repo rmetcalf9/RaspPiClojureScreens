@@ -36,6 +36,6 @@
 	)
 	(@announcement-function "Hello everyone!")
   )
-  
+  {:onclosehandler (partial @announcement-function "Goodbye all")}
 )
 
