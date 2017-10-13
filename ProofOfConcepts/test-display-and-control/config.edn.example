@@ -1,3 +1,4 @@
 {
  :api-token "TODO-ADD-TOKEN"
+ :announcement-channel "testbotchannel" ;name of channel used by bots to make announcements
 }

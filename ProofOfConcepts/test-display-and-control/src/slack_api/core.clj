@@ -355,7 +355,7 @@
   ))
 
   (println "slack worker setup complete")
-  [@recieved-slack-vars]
+  {:slack-vars @recieved-slack-vars}
 ))
 
 
@@ -365,10 +365,10 @@
   (do
     (def queue-of-messages-to-send (manifold/stream))
    
-    (def slack-vars (worker config recieved-message-function queue-of-messages-to-send))
+    (def worker-return-value (worker config recieved-message-function queue-of-messages-to-send))
   )
 
   ;return a function to the caller to allow them to send messages to slack
-  [(partial send-message-to-channel queue-of-messages-to-send) slack-vars]
+  [(partial send-message-to-channel queue-of-messages-to-send) (:slack-vars worker-return-value)]
 )
 
