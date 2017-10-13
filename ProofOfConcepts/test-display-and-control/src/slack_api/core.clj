@@ -19,33 +19,7 @@
   swap! atom (fn [arg1 arg2] arg2) newval)
 )
 
-
 (def verbose-output false)
-
-;*****************
-;Tmp code added to try and debug No implementation of method: :take! of protocol error
-;*****************
-
-(defn format-result-for-slack [result]
-  (str "<@" (get-in result [:meta :user]) ">:"
-       (let [r (:evaluator/result result)]
-         (if (:status r)
-           (str "```"
-                "=> " (:form r) "\n"
-                (when-let [o (:output r)]
-                  o)
-                (if (nil? (:result r))
-                  "nil"
-                  (:result r))
-                "```")
-           (str "```"
-                "==> " (or (:form r) (:input r)) "\n"
-                (or (:result r) "Unknown Error")
-                "```")))))
-
-;*****************
-;End ot tmp code
-;*****************
 
 (defn get-websocket-info [api-token]
   (let [response (-> (http/get "https://slack.com/api/rtm.start"
