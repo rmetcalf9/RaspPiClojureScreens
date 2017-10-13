@@ -88,9 +88,6 @@
   (print ".")
 ))
 
-;now function required for setting current time to atom
-(defn nowFn [inp] (t/now))
-
 ;Worker thread that will call any function (fn) repeatadly (with a wait delay) until the app terminates
 (defn worker [fn wait] (do
   (println "start of worker")
@@ -104,7 +101,7 @@
     (while (t/before? (t/now) @endSleepTime) (do
       (Thread/sleep 100)
       (if (not(pos? @appRunning)) (do
-        (swap! endSleepTime nowFn)
+        (reset! endSleepTime  (t/now))
       ))
     ))
     ;(Thread/sleep wait)
