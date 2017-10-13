@@ -35,9 +35,8 @@
   (let [
       next-id (fn [] (swap! idcounteratom inc))
 	  msg-with-id (assoc orig-msg :id (next-id))
-    ] (do (println @idcounteratom)
+    ]
 	(ws/send-msg socket (generate-string msg-with-id))
-	)
   )
 ) ;send-message-to-socket
 
