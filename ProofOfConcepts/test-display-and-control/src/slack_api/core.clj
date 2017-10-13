@@ -15,6 +15,7 @@
   )
 )
 
+;if set to true will output more debug messages
 (def verbose-output false)
 
 (defn get-websocket-info [api-token]
@@ -30,17 +31,17 @@
   )
 ) ;defn get-websocket-into
 
-(defn send-message-to-socket [socket orig-msg]
+(defn send-message-to-socket [idcounteratom socket orig-msg]
   (let [
-      counter (atom 0)
-      next-id (fn [] (swap! counter inc))
+      next-id (fn [] (swap! idcounteratom inc))
 	  msg-with-id (assoc orig-msg :id (next-id))
-    ]
+    ] (do (println @idcounteratom)
 	(ws/send-msg socket (generate-string msg-with-id))
+	)
   )
 ) ;send-message-to-socket
 
-(defn worker-to-send-messages-from-queue [socket queue-of-messages-to-send]
+(defn worker-to-send-messages-from-queue [idcounteratom socket queue-of-messages-to-send]
   "Worker thread that will send pending messages"
   (loop [] 
     (do
@@ -52,7 +53,7 @@
           :text    (:message-string msg)
         }	  
       ]
-		(send-message-to-socket socket slack-msg)
+		(send-message-to-socket idcounteratom socket slack-msg)
       )
 
 	  (Thread/sleep 200) ;only send outgoing messages 5 times a second
@@ -63,13 +64,10 @@
   )
 )
 
-;    (defn consumer []
-;       (loop-forever
-;         (fn [] (println @(lamina/read-channel ch))))
-;		 )
-
 (defn connect-socket [url queue-of-messages-to-send]
-  (let [in (async/chan)
+  (let [
+        idcounteratom (atom 0)
+        in (async/chan)
         out (async/chan)
         socket (ws/connect
                  url
@@ -78,17 +76,18 @@
                    (async/put! in (parse-string m true)))
                  :on-error
                  (fn [_]
-                   (async/close! in)))]
+                   (async/close! in)))
+       ]
 
     (do
-	  (-> (Thread. (fn [] (worker-to-send-messages-from-queue socket queue-of-messages-to-send))) .start)
+	  (-> (Thread. (fn [] (worker-to-send-messages-from-queue idcounteratom socket queue-of-messages-to-send))) .start)
       (go-loop []
         (let [
 	        orig-msg (async/<! out)
 	      ]
 	      (do
 		    ;(println (str "Sending id " (:id msg-with-id)))
-            (send-message-to-socket socket orig-msg)
+            (send-message-to-socket idcounteratom socket orig-msg)
             (recur)
 		  )
 	     )

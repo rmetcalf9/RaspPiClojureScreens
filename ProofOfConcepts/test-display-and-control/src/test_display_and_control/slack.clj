@@ -3,8 +3,11 @@
   (:require 
     [slack-api.core :as slack-api]
   )
-  )
+)
 
+;Single announcement function used when chatbot needs to send message to no particular channel
+; as we do not know the channel id's until we have quired slack this function is stored in an
+; atom. The start function will fill this atom with the correct function to call.
 (def announcement-function (atom (fn [annouancment-txt] (println "Error!"))))
   
 (defn recieved-message [msg replyfn] (do
