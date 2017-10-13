@@ -15,6 +15,11 @@
   )
 )
 
+(defn set-new-atom-value [atom newval] (
+  swap! atom (fn [arg1 arg2] arg2) newval)
+)
+
+
 (def verbose-output false)
 
 ;*****************
@@ -308,9 +313,8 @@
   (println "slack worker started")
   
   (def recieved-slack-vars (atom {}))
-  (defn return-second-arg [arg1 arg2] (identity arg2))
   (defn set-recieved-slack-vars [newval] (
-    swap! recieved-slack-vars return-second-arg newval)
+    set-new-atom-value recieved-slack-vars newval)
   )
  ; (set-recieved-slack-vars rec-slack-vars)
  

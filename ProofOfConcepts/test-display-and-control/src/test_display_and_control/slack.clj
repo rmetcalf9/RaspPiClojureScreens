@@ -5,9 +5,8 @@
   )
   )
 
-(defn return-second-arg [arg1 arg2] (identity arg2))
 (defn set-new-atom-value [atom newval] (
-  swap! atom return-second-arg newval)
+  swap! atom (fn [arg1 arg2] arg2) newval)
 )
 (def announcement-function (atom (fn [annouancment-txt] (println "Error!"))))
   
@@ -22,10 +21,6 @@
 (defn start
   [config]
   (let [[send-fn slack-vars] (slack-api/start config recieved-message)]
-    ;TODO we need to derive the channel we need to send the message to
-	
-	(@announcement-function "Hello")
-	
 	(if (= (:announcement-channel config) nil)
 	 (set-new-atom-value announcement-function (fn [annouancment-txt] nil)); no announcement channel - do nothing when we get announcements
 	 (do
@@ -35,10 +30,7 @@
 	       (println (str"Warning announcement channel not found - " (:announcement-channel config)))
 		   (set-new-atom-value announcement-function (fn [annouancment-txt] nil))
 		 )
-	     (do
-		   (println (:id (first announcement-channel)))
-		   (set-new-atom-value announcement-function (fn [annouancment-txt] (send-fn {:channel (:id (first announcement-channel)) :message-string annouancment-txt})))
-		 )
+         (set-new-atom-value announcement-function (fn [annouancment-txt] (send-fn {:channel (:id (first announcement-channel)) :message-string annouancment-txt})))
 	   )
 	 )
 	)
