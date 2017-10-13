@@ -50,7 +50,7 @@
                      :body)]
      ;(println response) ;use this line to dump the recieved data to help write code to extract relevant data
     (when (:ok response)
-      {:botid (:id (:self response)) :botname (:name (:self response)) :url (:url response)}
+      {:botid (:id (:self response)) :botname (:name (:self response)) :url (:url response) :channels (:channels response)}
     )
   )
 ) ;defn get-websocket-into
@@ -202,10 +202,10 @@
 
 (defn get-comm-channel 
   "Given an api-token return a com channel with input and output functions [cin cout stop]"
-  [api-token queue-of-messages-to-send]
+  [api-token queue-of-messages-to-send message-reply-function set-recieved-slack-vars]
   (let [cin (async/chan 10)
         cout (async/chan 10)
-        {:keys [botid botname url]} (get-websocket-info api-token)
+        {:keys [botid botname url channels]} (get-websocket-info api-token)
         shutdown (fn []
                    (async/close! cin)
                    (async/close! cout))
@@ -219,6 +219,12 @@
 	  (println ":: got websocket url:" url)
 	)
     (println ":: Name of this bot is:" botname)
+	
+	(set-recieved-slack-vars {
+	    :botname botname
+		:channels channels
+	  }
+	)
 
     ;; start a loop to process messages
     (go-loop [[in out] (connect-socket url queue-of-messages-to-send)
@@ -300,8 +306,17 @@
 ;worker
 (defn worker [{:keys [api-token]} recieved-message-function queue-of-messages-to-send] (do
   (println "slack worker started")
+  
+  (def recieved-slack-vars (atom {}))
+  (defn return-second-arg [arg1 arg2] (identity arg2))
+  (defn set-recieved-slack-vars [newval] (
+    swap! recieved-slack-vars return-second-arg newval)
+  )
+ ; (set-recieved-slack-vars rec-slack-vars)
+ 
+  
   (let [
-         inst-comm (fn[] (get-comm-channel api-token queue-of-messages-to-send))
+         inst-comm (fn[] (get-comm-channel api-token queue-of-messages-to-send message-reply-function set-recieved-slack-vars))
      ]
     (go-loop [[in out stop] (inst-comm)]
 	  (do
@@ -331,8 +346,16 @@
     ) ;go-loop
 	;(.join (Thread/currentThread))
   )
+  
+  ;wait until we have recieved data from slack
+  (loop [i 0]  
+	(when (= @recieved-slack-vars {})
+      (Thread/sleep 100)
+      (recur (inc i)); loop i will take this value
+  ))
 
   (println "slack worker setup complete")
+  [@recieved-slack-vars]
 ))
 
 
@@ -342,10 +365,10 @@
   (do
     (def queue-of-messages-to-send (manifold/stream))
    
-    (worker config recieved-message-function queue-of-messages-to-send)
+    (def slack-vars (worker config recieved-message-function queue-of-messages-to-send))
   )
 
   ;return a function to the caller to allow them to send messages to slack
-  [(partial send-message-to-channel queue-of-messages-to-send)]
+  [(partial send-message-to-channel queue-of-messages-to-send) slack-vars]
 )
 
