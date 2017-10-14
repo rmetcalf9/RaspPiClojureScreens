@@ -121,8 +121,11 @@
     (def slack-ret (slack/start config))
 	(register-function-for-close-down-notification (:onclosehandler slack-ret))
 	
-    ;TODO comment out full-screen to make debugging easier (you can see console and window together)
-    (sc/full-screen! main-window)
+    ;Only go into fullscreen if config allows
+    (if (:supress-fullscreen config)
+      (println "Fullscreen supressed due to config")
+      (sc/full-screen! main-window)
+    )
 
     ;(sc/pack! main-window) not needed as we don't need the frame to resize to fit contents
     (sc/show! main-window)
