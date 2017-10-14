@@ -6,7 +6,7 @@
     [clj-http.client :as http]
     [gniazdo.core :as ws]
     [clojure.core.async :as async :refer [>! <! go go-loop]]
-	[clojure.string :as str]
+    [clojure.string :as str]
 ;	[lamina.core :as lamina] ;moved to manifold as lamina is depreciated
     [manifold.stream :as manifold] ;https://github.com/ztellman/manifold
   )
@@ -96,7 +96,7 @@
 ) ;defn connect-socket
 
 (defn remove-particular-start
-  "Given a sgtring remove a prefix if it is present. Return an indicator to show if it was removed as well as the resultant string"
+  "Given a string remove a prefix if it is present. Return an indicator to show if it was removed as well as the resultant string"
   [input-string prefix-to-remove]
     (if (str/starts-with? (str/lower-case input-string) (str/lower-case (str prefix-to-remove " ")))
       [true (subs input-string (+ 1 (count prefix-to-remove)))]

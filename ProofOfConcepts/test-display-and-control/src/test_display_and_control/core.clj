@@ -119,7 +119,7 @@
 
     ;(println (config :comm))
     (def slack-ret (slack/start config))
-	(register-function-for-close-down-notification (:onclosehandler slack-ret))
+	  (register-function-for-close-down-notification (:onclosehandler slack-ret))
 	
     ;Only go into fullscreen if config allows
     (if (:supress-fullscreen config)

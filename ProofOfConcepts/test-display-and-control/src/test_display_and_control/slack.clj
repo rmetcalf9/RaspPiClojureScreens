@@ -2,6 +2,7 @@
   (:gen-class)
   (:require 
     [slack-api.core :as slack-api]
+    [clojure.string :as str]
   )
 )
 
@@ -10,16 +11,39 @@
 ; atom. The start function will fill this atom with the correct function to call.
 (def announcement-function (atom (fn [annouancment-txt] (println "Error!"))))
   
+;Atom pointing to a List of Sets which contains the commands that the program supports
+;commands have the structure:
+; :name
+; :exec - execute function
+(def commands (atom []))
+(defn register-list-of-commands [list-of-commands-to-add]
+  (swap! commands concat list-of-commands-to-add)
+)
+
 (defn recieved-message [msg replyfn] (do
   (if (:is-message-for-my-attention msg) (do
-    (println "Rec msg for my attention")
-    (println msg)
-	(replyfn msg (str "This is a test reply to msg: " (:actual_text msg)))
+    (def command-recieved (first (str/split (str (:actual_text msg) " ") #" ")))
+	  (def command (first (filter (fn [x] (= command-recieved (:name x))) @commands)))
+    (if (= command ())
+      () ;not a recognised command
+      ((:exec command) msg replyfn) ;execute the command
+    )
+;    (replyfn msg (str "This is a test reply to msg: " (:actual_text msg)))
   ))
 ))
 
+
+
 (defn start
   [config]
+
+  ;Add list commands command
+  (register-list-of-commands 
+    [
+      {:name "list" :exec (fn[msg replyfn] (replyfn msg "Test list command"))}
+    ]
+  )
+
   (let [[send-fn slack-vars] (slack-api/start config recieved-message)]
 	(if (= (:announcement-channel config) nil)
 	 (reset! announcement-function (fn [annouancment-txt] nil)); no announcement channel - do nothing when we get announcements
