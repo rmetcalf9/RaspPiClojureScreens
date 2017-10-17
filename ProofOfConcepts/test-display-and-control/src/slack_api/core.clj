@@ -15,6 +15,8 @@
   )
 )
 
+;Slack Message formatting document: https://api.slack.com/docs/message-formatting
+
 ;if set to true will output more debug messages
 (def verbose-output false)
 
