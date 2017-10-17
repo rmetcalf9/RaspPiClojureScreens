@@ -1,4 +1,4 @@
-(ns test-display-and-control.mod-clock
+(ns test-display-and-control.modules.clock
   (:gen-class)
   (:require [seesaw.core :as sc]
         [seesaw.graphics :as sg]

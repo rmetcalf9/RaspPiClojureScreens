@@ -35,8 +35,10 @@
   ))
 ))
 
-(defn cmd-list [msg replyfn] (do
-  (replyfn "Test list command")
+(defn command-description-string [command] (str (:name command) " - TODO"))
+
+(defn cmd-list "Command to list availialbe commands" [msg replyfn] (do
+  (replyfn (clojure.string/join "\n" (concat ["*I understand the following commands:*"] (map command-description-string @commands))))
 ))
 
 (defn start

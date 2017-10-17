@@ -1,4 +1,4 @@
-(ns test-display-and-control.mod-simple
+(ns test-display-and-control.modules.simple
   (:gen-class)
   (:require [seesaw.core :as sc]
         [seesaw.graphics :as sg]
@@ -11,7 +11,7 @@
 (defn describe [] 
   (hash-map 
     :module-name "mod-simple", 
-    :module-description "Simple minimal module that provides blank"
+    :module-description "Simple minimal module that provides blank slide"
   )
 )
 

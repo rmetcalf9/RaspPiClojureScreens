@@ -1,8 +1,9 @@
 (ns test-display-and-control.moduleControl
   (:gen-class)
   (:require 
-        [test-display-and-control.mod-clock :as mod-clock]
-        [test-display-and-control.mod-simple :as mod-simple]
+        [test-display-and-control.modules.clock :as mod-clock]
+        [test-display-and-control.modules.simple :as mod-simple]
+		[test-display-and-control.slack :as slack]
   ))
 
 ;List of all the loaded modules - this points to the modules describe function.
@@ -12,6 +13,17 @@
   mod-simple/describe
 ])
 
+(defn module-description-string [module] (let [mod (module)] (str (:module-name mod) " - " (:module-description mod))))
+
+(defn cmd-modules "Command to list availialbe modules" [msg replyfn] (do
+  (replyfn (clojure.string/join "\n" (concat ["*I have the following modules availiable:*"] (map module-description-string module-list))))
+))
+
+(slack/register-list-of-commands 
+  [
+    {:name "modules" :exec cmd-modules}
+  ]
+)
 
 (defn paint-canvas [c g]
   (mod-clock/draw-clock c g [300 300] 150 5)
