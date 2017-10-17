@@ -175,7 +175,7 @@
 
 (defn get-comm-channel 
   "Given an api-token return a com channel with input and output functions [cin cout stop]"
-  [api-token queue-of-messages-to-send message-reply-function set-recieved-slack-vars]
+  [api-token queue-of-messages-to-send set-recieved-slack-vars]
   (let [cin (async/chan 10)
         cout (async/chan 10)
         {:keys [botid botname url channels]} (get-websocket-info api-token)
@@ -288,13 +288,13 @@
  
   
   (let [
-         inst-comm (fn[] (get-comm-channel api-token queue-of-messages-to-send message-reply-function set-recieved-slack-vars))
+         inst-comm (fn[] (get-comm-channel api-token queue-of-messages-to-send set-recieved-slack-vars))
      ]
     (go-loop [[in out stop] (inst-comm)]
 	  (do
         (if-let [form (<! in)] 
 	     (do
-		  (recieved-message-function form (partial message-reply-function queue-of-messages-to-send))
+		  (recieved-message-function form (partial message-reply-function queue-of-messages-to-send form))
           (recur [in out stop])
 		 )
 		 ;worker is no longer sending messages back using the out channel

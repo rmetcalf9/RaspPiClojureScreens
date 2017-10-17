@@ -23,16 +23,21 @@
 (defn recieved-message [msg replyfn] (do
   (if (:is-message-for-my-attention msg) (do
     (def command-recieved (first (str/split (str (:actual_text msg) " ") #" ")))
-	  (def command (first (filter (fn [x] (= command-recieved (:name x))) @commands)))
-    (if (= command ())
-      () ;not a recognised command
-      ((:exec command) msg replyfn) ;execute the command
-    )
-;    (replyfn msg (str "This is a test reply to msg: " (:actual_text msg)))
+    (def command (first (filter (fn [x] (= command-recieved (:name x))) @commands)))
+    (if (nil? command)
+      (replyfn "I don't understand that command") ;not a recognised command ignore it
+      (if (= command ())
+        (replyfn "I don't understand that command") ;not a recognised command ignore it
+        ((:exec command) msg replyfn) ;execute the command
+      )
+	)
+;    (replyfn (str "This is a test reply to msg: " (:actual_text msg)))
   ))
 ))
 
-
+(defn cmd-list [msg replyfn] (do
+  (replyfn "Test list command")
+))
 
 (defn start
   [config]
@@ -40,7 +45,7 @@
   ;Add list commands command
   (register-list-of-commands 
     [
-      {:name "list" :exec (fn[msg replyfn] (replyfn msg "Test list command"))}
+      {:name "list" :exec cmd-list}
     ]
   )
 
