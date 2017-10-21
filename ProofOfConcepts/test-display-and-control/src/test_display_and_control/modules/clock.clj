@@ -9,14 +9,6 @@
 ;Module that provides slides that display a clock
 
 
-(defn describe [] 
-  (hash-map 
-    :module-name "mod-clock", 
-    :module-description "Slides that display a clock"
-  )
-)
-
-
 ;Time library documentation
 ;https://github.com/seancorfield/clj-time
 
@@ -109,4 +101,17 @@
   ;reset canvas back to origional settings
   (sg/translate g (- 0 (first center)) (- 0 (last center)))
 )
+
+(defn paint-canvas [c g]
+  (draw-clock c g [300 300] 150 5)
+)
+
+(defn describe [] 
+  (hash-map 
+    :module-name "mod-clock", 
+    :module-description "Slides that display a clock"
+    :paint-canvas paint-canvas
+  )
+)
+
 
