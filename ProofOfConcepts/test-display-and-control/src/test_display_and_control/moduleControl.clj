@@ -21,7 +21,7 @@
 
 (slack/register-list-of-commands 
   [
-    {:name "modules" :exec cmd-modules}
+    {:name "modules" :exec cmd-modules :description "Command to list availiable modules" :helptext "TODO"}
   ]
 )
 

@@ -35,10 +35,29 @@
   ))
 ))
 
-(defn command-description-string [command] (str (:name command) " - TODO"))
+(defn command-description-string [command] (str (:name command) " - " (:description command)))
 
 (defn cmd-list "Command to list availialbe commands" [msg replyfn] (do
   (replyfn (clojure.string/join "\n" (concat ["*I understand the following commands:*"] (map command-description-string @commands))))
+))
+
+(defn cmd-help "Display help message for particular command" [msg replyfn] (do
+  (let [
+      cmdArr (rest (str/split (str (:actual_text msg) " ") #" "))
+    ]
+    (if (= (count cmdArr) 1)
+      (let [
+          command-recieved-text (first cmdArr)
+          command-looked-up (first (filter (fn [x] (= command-recieved-text (:name x))) @commands))
+        ]
+        (if (nil? command-looked-up)
+          (replyfn (str "There is no command " command-recieved-text))
+          (replyfn (str "Help for" (:name command-looked-up) "\n" (:helptext command-looked-up)))
+        )
+      )
+      (replyfn "You must supply one argument which is the name of the command to get help on.\ne.g. help list")
+    )
+  )
 ))
 
 (defn start
@@ -47,7 +66,8 @@
   ;Add list commands command
   (register-list-of-commands 
     [
-      {:name "list" :exec cmd-list}
+      {:name "list" :exec cmd-list :description "Command to list availiable commands" :helptext "TODO"}
+      {:name "help" :exec cmd-help :description "Display the help text for a command" :helptext "Takes one paramater - the name of the command to display help text for"}
     ]
   )
 
