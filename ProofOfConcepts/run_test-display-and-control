@@ -1,6 +1,7 @@
 #!/bin/bash
 
-cd ./test-display-and-control
-lein run
+DIR=/home/pi/RaspPiClojureScreens/ProofOfConcepts
+cd ${DIR}/test-display-and-control
+lein run > /home/pi/lein-test-display-and-control.log 2>&1
 
 exit 0
