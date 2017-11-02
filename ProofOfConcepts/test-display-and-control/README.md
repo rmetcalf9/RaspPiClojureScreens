@@ -37,6 +37,10 @@ You will need to create a local config.edn which is not ever uploaded to git. Th
 lein run
 ````
 
+## Design
+
+<img src="https://docs.google.com/drawings/d/e/2PACX-1vRVbSvLwNu1uB7Qr4OJnB1oZCgcMXXBJkZsIAmT_L0auOJxXmrEIQHkJwcZ8Z8G_lA9nAEOcJuJkNeq/pub?w=960&amp;h=720">
+
 ## Options
 
 
