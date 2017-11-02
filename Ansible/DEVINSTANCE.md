@@ -94,5 +94,11 @@ PasswordAuthentication no
 
 Also it is a good idea to run passwd and change the pi user password from raspberry to a random value that dosen't need to be kept.
 
+# X. Change mode from connect via USB to plug in to tv
 
+If you are connecting directly to the TV you don't need tightvnc to access via usb so you can disable it:
+````
+sudo systemctl stop tightvncserver
+sudo systemctl disable tightvncserver
+````
 
