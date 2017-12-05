@@ -1,7 +1,7 @@
-(ns test-display-and-control.core-test
+(ns test-display-and-control.slack-test
   (:require [clojure.test :refer :all]
             [test-display-and-control.core :refer :all]))
 
 (deftest a-test
-  (testing "FIXME, I fail."
-    (is (= 1 1))))
+  (testing "slack test"
+    (is (= 0 1))))
