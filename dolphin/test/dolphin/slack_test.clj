@@ -5,11 +5,6 @@
 
 (deftest register-one-command
   (testing "Register-one-command"
-    (do
-			(is (= 0 (count @test/list-of-commands)))
-			(test/add-to-list-of-commands ["A"])	
-			(is (= 1 (count @test/list-of-commands)))
-		)
-  )
-)
-
+    (let [length (count @test/list-of-commands)]
+      (test/add-to-list-of-commands ["A"])	
+      (is (= (+ length 1) (count @test/list-of-commands))))))
